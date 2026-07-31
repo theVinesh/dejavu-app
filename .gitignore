@@ -28,3 +28,7 @@ captures
 **/fastlane/test_output
 vendor/bundle
 .bundle/
+
+# Local design / generated tooling
+.stitch/
+gradle/gradle-daemon-jvm.properties
