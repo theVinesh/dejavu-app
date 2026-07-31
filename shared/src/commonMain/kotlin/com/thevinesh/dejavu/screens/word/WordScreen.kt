@@ -19,8 +19,10 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,6 +42,7 @@ fun WordScreen(
     viewModel: WordViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val haptic = LocalHapticFeedback.current
 
     StageScaffold {
         if (!state.physicsEnabled) {
@@ -57,7 +60,10 @@ fun WordScreen(
                         )
                         .pointerInput(state.zoomFinished) {
                             if (state.zoomFinished) {
-                                detectTapGestures { viewModel.onPlayTapped() }
+                                detectTapGestures {
+                                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                    viewModel.onPlayTapped()
+                                }
                             }
                         }
                 ) {

@@ -18,6 +18,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -41,6 +43,7 @@ fun WordCountScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val navEffect by viewModel.navEffect.collectAsStateWithLifecycle()
+    val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(navEffect) {
         when (navEffect) {
@@ -133,7 +136,10 @@ fun WordCountScreen(
                             .align(Alignment.TopEnd)
                             .offset(x = 8.dp, y = (-8).dp)
                             .size(50.dp)
-                            .clickable { viewModel.onEvent(WordCountEvent.Clear) },
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                viewModel.onEvent(WordCountEvent.Clear)
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         HeroCircle(size = 50.dp) {
@@ -150,7 +156,10 @@ fun WordCountScreen(
                     size = 80.dp,
                     modifier = Modifier
                         .padding(top = 10.dp)
-                        .clickable { viewModel.onNext() }
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                            viewModel.onNext()
+                        }
                 ) {
                     Text(
                         text = "next",

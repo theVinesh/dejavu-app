@@ -15,6 +15,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntOffset
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -75,8 +77,10 @@ fun Modifier.entranceThenFadeOut(
 @Composable
 fun Modifier.shake(trigger: Int): Modifier {
     val offsetX = remember { Animatable(0f) }
+    val haptic = LocalHapticFeedback.current
     LaunchedEffect(trigger) {
         if (trigger == 0) return@LaunchedEffect
+        haptic.performHapticFeedback(HapticFeedbackType.Reject)
         offsetX.animateTo(
             targetValue = 0f,
             animationSpec = keyframes {

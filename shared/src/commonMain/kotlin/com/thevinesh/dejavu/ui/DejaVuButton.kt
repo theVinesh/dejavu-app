@@ -18,6 +18,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -75,6 +77,7 @@ fun DejaVuButton(
     } else {
         MaterialTheme.typography.labelLarge
     }
+    val haptic = LocalHapticFeedback.current
 
     Row(
         modifier = modifier
@@ -82,7 +85,14 @@ fun DejaVuButton(
             .shadow(DejaVuElevation.Control, CircleShape, clip = false)
             .clip(CircleShape)
             .background(containerColor)
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .clickable(
+                enabled = enabled,
+                role = Role.Button,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                    onClick()
+                }
+            )
             .alpha(if (enabled) 1f else 0.55f)
             .padding(horizontal = horizontalPadding, vertical = verticalPadding),
         horizontalArrangement = Arrangement.Center,

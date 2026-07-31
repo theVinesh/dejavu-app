@@ -18,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -46,6 +48,7 @@ fun LetterGroup(
     } else {
         DejaVuElevation.Control
     }
+    val haptic = LocalHapticFeedback.current
 
     Box(
         modifier = modifier.padding(top = 12.dp, end = 8.dp)
@@ -68,7 +71,14 @@ fun LetterGroup(
                         Modifier
                     }
                 )
-                .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+                .clickable(
+                    enabled = enabled,
+                    role = Role.Button,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                        onClick()
+                    }
+                )
                 .semantics { selected = isSelected },
             contentAlignment = Alignment.Center
         ) {
