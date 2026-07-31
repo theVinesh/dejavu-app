@@ -1,5 +1,6 @@
 package com.thevinesh.dejavu.di
 
+import com.russhwolf.settings.Settings
 import com.thevinesh.dejavu.data.TutorialPreferences
 import com.thevinesh.dejavu.domain.GameSession
 import com.thevinesh.dejavu.screens.step.StepViewModel
@@ -12,6 +13,7 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val appModule = module {
+    single<Settings> { Settings() }
     singleOf(::TutorialPreferences)
     singleOf(::GameSession)
     viewModelOf(::WordCountViewModel)
