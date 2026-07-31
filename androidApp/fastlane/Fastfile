@@ -1,11 +1,14 @@
 default_platform(:android)
 
+def play_json_key_path
+  path = ENV["ANDROID_PLAY_CONFIG_JSON_PATH"].to_s
+  UI.user_error!("ANDROID_PLAY_CONFIG_JSON_PATH must point to a readable Google Play service account json key") if path.empty? || !File.exist?(path)
+  path
+end
+
 platform :android do
   desc "Upload a prebuilt Android App Bundle to Google Play internal testing"
   lane :deploy do
-    play_config_path = ENV["ANDROID_PLAY_CONFIG_JSON_PATH"]
-    UI.user_error!("ANDROID_PLAY_CONFIG_JSON_PATH must point to a readable Google Play service account json key") if play_config_path.to_s.empty? || !File.exist?(play_config_path)
-
     aab_path = ENV["ANDROID_AAB_PATH"]
     UI.user_error!("ANDROID_AAB_PATH must point to a readable Android App Bundle") if aab_path.to_s.empty? || !File.exist?(aab_path)
 
@@ -13,6 +16,7 @@ platform :android do
     release_status = ENV.fetch("ANDROID_PLAY_RELEASE_STATUS", "completed")
 
     upload_to_play_store(
+      json_key: play_json_key_path,
       track: ENV.fetch("ANDROID_PLAY_TRACK", "internal"),
       release_status: release_status,
       skip_upload_apk: true,
@@ -21,6 +25,25 @@ platform :android do
       skip_upload_images: true,
       skip_upload_screenshots: true,
       aab: aab_path
+    )
+  end
+
+  desc "Sync Play Store listing metadata, graphics, and screenshots (no AAB upload)"
+  lane :sync_store_listing do
+    # Requires Play Console SA permission to manage store presence / commit listing edits.
+    # Without that, uploads may succeed into an edit but commit returns 403 PERMISSION_DENIED.
+    upload_to_play_store(
+      json_key: play_json_key_path,
+      track: ENV.fetch("ANDROID_PLAY_TRACK", "internal"),
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_changelogs: true,
+      skip_upload_metadata: false,
+      skip_upload_images: false,
+      skip_upload_screenshots: false,
+      metadata_path: "fastlane/metadata/android",
+      changes_not_sent_for_review: true,
+      timeout: 1200
     )
   end
 end
