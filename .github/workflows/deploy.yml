@@ -1,0 +1,206 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for Gradlew
+        run: chmod +x gradlew
+
+      - name: Run shared JVM unit tests
+        run: ./gradlew :shared:jvmTest --stacktrace
+
+  build-android:
+    name: Build Android release AAB
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for Gradlew
+        run: chmod +x gradlew
+
+      - name: Validate Android release signing inputs
+        env:
+          KEYSTORE_FILE_BASE64: ${{ secrets.KEYSTORE_FILE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          for var in KEYSTORE_FILE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!var}" ]; then
+              echo "::error::$var is required for a release-signed Android AAB"
+              exit 1
+            fi
+          done
+
+      - name: Decode Keystore
+        run: echo "${{ secrets.KEYSTORE_FILE_BASE64 }}" | base64 --decode > "${{ github.workspace }}/androidApp/release.jks"
+
+      - name: Build Android release AAB
+        run: ./gradlew :androidApp:bundleRelease --stacktrace
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          ANDROID_RELEASE_KEYSTORE_PATH: ${{ github.workspace }}/androidApp/release.jks
+          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload Android release AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dejavu-android-release-aab
+          path: androidApp/build/outputs/bundle/release/androidApp-release.aab
+          if-no-files-found: error
+
+  build-ios:
+    name: Build iOS release IPA
+    needs: test
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for Gradlew
+        run: chmod +x gradlew
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler: default
+          bundler-cache: true
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Build iOS release artifact
+        working-directory: iosApp
+        run: bundle exec fastlane ios build_release_artifact
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+
+      - name: Upload iOS release IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dejavu-ios-release-ipa
+          path: iosApp/build/ci-release/DejaVu.ipa
+          if-no-files-found: error
+
+  deploy-android:
+    name: Deploy Android to Play Internal
+    needs: [build-android]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler: default
+          bundler-cache: true
+
+      - name: Create Google Play Service Account Key
+        run: echo '${{ secrets.PLAY_STORE_CONFIG_JSON }}' > "${{ github.workspace }}/androidApp/play_config.json"
+
+      - name: Download Android release AAB artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dejavu-android-release-aab
+          path: androidApp/build/outputs/bundle/release
+
+      - name: Deploy to Play internal testing
+        working-directory: androidApp
+        run: bundle exec fastlane android deploy
+        env:
+          ANDROID_PLAY_CONFIG_JSON_PATH: ${{ github.workspace }}/androidApp/play_config.json
+          ANDROID_PLAY_TRACK: internal
+          # completed = available to internal testers immediately (not draft)
+          ANDROID_PLAY_RELEASE_STATUS: completed
+          ANDROID_AAB_PATH: ${{ github.workspace }}/androidApp/build/outputs/bundle/release/androidApp-release.aab
+
+  deploy-ios:
+    name: Deploy iOS to TestFlight
+    needs: [build-ios]
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler: default
+          bundler-cache: true
+
+      - name: Download iOS release IPA artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dejavu-ios-release-ipa
+          path: iosApp/build/ci-release
+
+      - name: Deploy to TestFlight
+        working-directory: iosApp
+        run: bundle exec fastlane ios deploy
+        env:
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+          IOS_IPA_PATH: ${{ github.workspace }}/iosApp/build/ci-release/DejaVu.ipa

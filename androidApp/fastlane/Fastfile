@@ -1,0 +1,26 @@
+default_platform(:android)
+
+platform :android do
+  desc "Upload a prebuilt Android App Bundle to Google Play internal testing"
+  lane :deploy do
+    play_config_path = ENV["ANDROID_PLAY_CONFIG_JSON_PATH"]
+    UI.user_error!("ANDROID_PLAY_CONFIG_JSON_PATH must point to a readable Google Play service account json key") if play_config_path.to_s.empty? || !File.exist?(play_config_path)
+
+    aab_path = ENV["ANDROID_AAB_PATH"]
+    UI.user_error!("ANDROID_AAB_PATH must point to a readable Android App Bundle") if aab_path.to_s.empty? || !File.exist?(aab_path)
+
+    # completed = immediately available to internal testers (not draft)
+    release_status = ENV.fetch("ANDROID_PLAY_RELEASE_STATUS", "completed")
+
+    upload_to_play_store(
+      track: ENV.fetch("ANDROID_PLAY_TRACK", "internal"),
+      release_status: release_status,
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      aab: aab_path
+    )
+  end
+end
