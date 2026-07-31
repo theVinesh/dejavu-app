@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DejaVu</string>
+    <string name="ins_line_1">Tap the groups in which\nthe letters occur</string>
+    <string name="ins_line_2">in the order as they occur</string>
+    <string name="ins_line_3">Again!, One more time</string>
+    <string name="ins_count_1">Enter the no.of letters in your word</string>
+    <string name="ins_count_2">and then click NEXT</string>
+    <string name="no_input_warning">Enter the number of letters in your word</string>
+    <string name="invalid_input_warning">Enter a number between 1 and 26</string>
+    <string name="next">next</string>
+    <string name="undo">undo</string>
+    <string name="think_message">Think of a Word</string>
+    <string name="play_message">Play with me</string>
+    <string name="no_of_letters">No. of Letters</string>
+    <string name="got_it">Got it</string>
+</resources>
