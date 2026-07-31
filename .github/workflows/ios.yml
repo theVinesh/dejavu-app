@@ -34,15 +34,23 @@ jobs:
 
       - name: Select Xcode
         run: |
-          echo "Available Xcode versions:"
-          ls /Applications | grep Xcode || true
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
           xcodebuild -version
 
       - name: Build Shared framework for iOS Simulator
         run: ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 --stacktrace
 
-      - name: Build iOS app (Simulator)
+      - name: Resolve iPhone simulator
+        id: sim
+        run: |
+          DEVICE=$(xcrun simctl list devices available | grep -E 'iPhone 1[6-9]|iPhone 15' | head -1 | sed -E 's/.*\(([-A-F0-9]+)\).*/\1/')
+          if [ -z "$DEVICE" ]; then
+            DEVICE=$(xcrun simctl list devices available | grep iPhone | head -1 | sed -E 's/.*\(([-A-F0-9]+)\).*/\1/')
+          fi
+          echo "udid=$DEVICE" >> "$GITHUB_OUTPUT"
+          xcrun simctl list devices available | grep iPhone | head -20
+
+      - name: Build iOS app (Simulator arm64)
         working-directory: iosApp
         env:
           JAVA_HOME: ${{ env.JAVA_HOME }}
@@ -52,7 +60,10 @@ jobs:
             -scheme iosApp \
             -configuration Debug \
             -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.udid }}" \
+            ARCHS=arm64 \
+            ONLY_ACTIVE_ARCH=YES \
+            EXCLUDED_ARCHS=x86_64 \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY=- \
             build
