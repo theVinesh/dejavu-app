@@ -20,7 +20,7 @@ kotlin {
     }
 
     androidLibrary {
-        namespace = "in.vincorp.dejavu.shared"
+        namespace = "com.vincorp.dejavu.shared"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
 
@@ -69,6 +69,6 @@ dependencies {
 
 compose.resources {
     publicResClass = true
-    packageOfResClass = "in.vincorp.dejavu.resources"
+    packageOfResClass = "com.vincorp.dejavu.resources"
     generateResClass = auto
 }
