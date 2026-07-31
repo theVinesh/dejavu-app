@@ -5,6 +5,8 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -94,5 +96,20 @@ fun Modifier.shake(trigger: Int): Modifier {
         )
     }
     return this.offset { IntOffset(offsetX.value.roundToInt(), 0) }
+}
+
+@Composable
+fun Modifier.pushOnPress(
+    interactionSource: InteractionSource,
+    enabled: Boolean = true,
+    pressedScale: Float = 0.96f
+): Modifier {
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (enabled && isPressed) pressedScale else 1f,
+        animationSpec = tween(durationMillis = if (isPressed) 70 else 120),
+        label = "pushOnPress"
+    )
+    return this.scale(scale)
 }
 

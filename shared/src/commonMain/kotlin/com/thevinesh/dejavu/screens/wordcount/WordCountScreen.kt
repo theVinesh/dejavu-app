@@ -1,6 +1,7 @@
 package com.thevinesh.dejavu.screens.wordcount
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -32,6 +34,7 @@ import com.thevinesh.dejavu.ui.StageScaffold
 import com.thevinesh.dejavu.ui.TutorialOverlay
 import com.thevinesh.dejavu.ui.entranceThenFadeOut
 import com.thevinesh.dejavu.ui.fadeInOnEnter
+import com.thevinesh.dejavu.ui.pushOnPress
 import com.thevinesh.dejavu.ui.shake
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -44,6 +47,8 @@ fun WordCountScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val navEffect by viewModel.navEffect.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
+    val clearInteractionSource = remember { MutableInteractionSource() }
+    val nextInteractionSource = remember { MutableInteractionSource() }
 
     LaunchedEffect(navEffect) {
         when (navEffect) {
@@ -136,10 +141,15 @@ fun WordCountScreen(
                             .align(Alignment.TopEnd)
                             .offset(x = 8.dp, y = (-8).dp)
                             .size(50.dp)
-                            .clickable {
-                                haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                                viewModel.onEvent(WordCountEvent.Clear)
-                            },
+                            .pushOnPress(clearInteractionSource)
+                            .clickable(
+                                interactionSource = clearInteractionSource,
+                                indication = null,
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                    viewModel.onEvent(WordCountEvent.Clear)
+                                }
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         HeroCircle(size = 50.dp) {
@@ -156,10 +166,15 @@ fun WordCountScreen(
                     size = 80.dp,
                     modifier = Modifier
                         .padding(top = 10.dp)
-                        .clickable {
-                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                            viewModel.onNext()
-                        }
+                        .pushOnPress(nextInteractionSource)
+                        .clickable(
+                            interactionSource = nextInteractionSource,
+                            indication = null,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                viewModel.onNext()
+                            }
+                        )
                 ) {
                     Text(
                         text = "next",
