@@ -71,6 +71,6 @@ appId: com.thevinesh.dejavu
 
 # Reveal - wait for the zoom-in to settle so the word is at rest and readable
 - extendedWaitUntil:
-    visible: "Play with me"
+    visible: "Did I get it right?"
     timeout: 20000
 - takeScreenshot: store_05_result

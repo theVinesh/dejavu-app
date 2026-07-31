@@ -11,6 +11,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.thevinesh.dejavu.domain.GameSession
 import com.thevinesh.dejavu.screens.splash.SplashScreen
 import com.thevinesh.dejavu.screens.step.StepPhase
 import com.thevinesh.dejavu.screens.step.StepScreen
@@ -19,6 +20,7 @@ import com.thevinesh.dejavu.screens.wordcount.WordCountScreen
 import com.thevinesh.dejavu.theme.Background
 import com.thevinesh.dejavu.theme.DejaVuTheme
 import kotlinx.serialization.Serializable
+import org.koin.compose.koinInject
 
 @Serializable
 object SplashDestination
@@ -43,6 +45,7 @@ fun App() {
             color = Background
         ) {
             val navController: NavHostController = rememberNavController()
+            val gameSession: GameSession = koinInject()
             NavHost(
                 navController = navController,
                 startDestination = SplashDestination,
@@ -90,7 +93,16 @@ fun App() {
                     )
                 }
                 composable<WordDestination> {
-                    WordScreen()
+                    WordScreen(
+                        onRestart = {
+                            gameSession.reset()
+                            navController.navigate(WordCountDestination) {
+                                popUpTo(navController.graph.id) {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                    )
                 }
             }
         }

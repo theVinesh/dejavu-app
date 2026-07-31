@@ -11,7 +11,6 @@
     <string name="next">next</string>
     <string name="undo">undo</string>
     <string name="think_message">Think of a Word</string>
-    <string name="play_message">Play with me</string>
     <string name="no_of_letters">No. of Letters</string>
     <string name="got_it">Got it</string>
 </resources>

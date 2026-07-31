@@ -1,8 +1,8 @@
 package com.thevinesh.dejavu.di
 
 import android.content.Context
-import com.thevinesh.dejavu.platform.AndroidSoundPlayer
-import com.thevinesh.dejavu.platform.SoundPlayer
+import com.thevinesh.dejavu.platform.AndroidShareLauncher
+import com.thevinesh.dejavu.platform.ShareLauncher
 import org.koin.dsl.module
 
 private lateinit var applicationContext: Context
@@ -12,5 +12,5 @@ fun setAndroidContext(context: Context) {
 }
 
 actual fun platformModule() = module {
-    single<SoundPlayer> { AndroidSoundPlayer(applicationContext) }
+    single<ShareLauncher> { AndroidShareLauncher(applicationContext) }
 }
