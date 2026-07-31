@@ -10,66 +10,78 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.thevinesh.dejavu.resources.Res
-import com.thevinesh.dejavu.resources.circula
+import com.thevinesh.dejavu.resources.comfortaa_variable
 import org.jetbrains.compose.resources.Font
 
 @Composable
 fun DejaVuTheme(content: @Composable () -> Unit) {
-    val circulaFont = FontFamily(Font(Res.font.circula))
-    val typography = remember(circulaFont) {
+    val comfortaa = rememberComfortaaFontFamily()
+    val typography = remember(comfortaa) {
         Typography(
             displayLarge = TextStyle(
-                fontFamily = circulaFont,
+                fontFamily = comfortaa,
                 fontWeight = FontWeight.Normal,
                 fontSize = 60.sp,
-                color = PrimaryText
+                color = CloudWhite
             ),
-            headlineLarge = TextStyle(
-                fontFamily = circulaFont,
+            displayMedium = TextStyle(
+                fontFamily = comfortaa,
                 fontWeight = FontWeight.Normal,
                 fontSize = 50.sp,
-                color = PrimaryText
+                color = CloudWhite
+            ),
+            headlineLarge = TextStyle(
+                fontFamily = comfortaa,
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp,
+                color = CloudWhite
             ),
             headlineMedium = TextStyle(
-                fontFamily = circulaFont,
+                fontFamily = comfortaa,
                 fontWeight = FontWeight.Normal,
                 fontSize = 30.sp,
-                color = PrimaryText
+                color = CloudWhite
             ),
             titleLarge = TextStyle(
-                fontFamily = circulaFont,
+                fontFamily = comfortaa,
                 fontWeight = FontWeight.Normal,
-                fontSize = 30.sp,
-                color = PrimaryText
+                fontSize = 24.sp,
+                color = CloudWhite
             ),
             bodyLarge = TextStyle(
-                fontFamily = circulaFont,
+                fontFamily = comfortaa,
                 fontWeight = FontWeight.Normal,
                 fontSize = 20.sp,
-                color = PrimaryText
+                color = CloudWhite
             ),
             labelLarge = TextStyle(
-                fontFamily = circulaFont,
+                fontFamily = comfortaa,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = CloudWhite
+            ),
+            labelMedium = TextStyle(
+                fontFamily = comfortaa,
                 fontWeight = FontWeight.Normal,
-                fontSize = 30.sp,
-                color = PrimaryText
+                fontSize = 15.sp,
+                color = CloudWhite
             )
         )
     }
 
     MaterialTheme(
         colorScheme = lightColorScheme(
-            primary = LighterTheme,
-            onPrimary = PrimaryText,
-            secondary = Yellow,
-            onSecondary = PrimaryText,
-            tertiary = Green,
-            onTertiary = PrimaryText,
-            background = Background,
-            onBackground = PrimaryText,
-            surface = Background,
-            onSurface = PrimaryText,
-            error = Yellow
+            primary = Coral,
+            onPrimary = CloudWhite,
+            secondary = SunshineYellow,
+            onSecondary = StageRed,
+            tertiary = Teal,
+            onTertiary = CloudWhite,
+            background = StageRed,
+            onBackground = CloudWhite,
+            surface = StageRed,
+            onSurface = CloudWhite,
+            error = SunshineYellow
         ),
         typography = typography,
         content = content
@@ -77,6 +89,9 @@ fun DejaVuTheme(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun rememberCirculaFontFamily(): FontFamily {
-    return FontFamily(Font(Res.font.circula))
+fun rememberComfortaaFontFamily(): FontFamily {
+    return FontFamily(
+        Font(Res.font.comfortaa_variable, weight = FontWeight.Normal),
+        Font(Res.font.comfortaa_variable, weight = FontWeight.Bold)
+    )
 }

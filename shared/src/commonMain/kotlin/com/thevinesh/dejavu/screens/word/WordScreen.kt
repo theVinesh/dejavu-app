@@ -1,6 +1,5 @@
 package com.thevinesh.dejavu.screens.word
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -8,7 +7,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,11 +25,12 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.thevinesh.dejavu.theme.Background
-import com.thevinesh.dejavu.theme.PrimaryText
-import com.thevinesh.dejavu.theme.Yellow
-import com.thevinesh.dejavu.theme.rememberCirculaFontFamily
-import com.thevinesh.dejavu.ui.CircleBackground
+import com.thevinesh.dejavu.theme.CloudWhite
+import com.thevinesh.dejavu.ui.DejaVuButton
+import com.thevinesh.dejavu.ui.DejaVuButtonSize
+import com.thevinesh.dejavu.ui.DejaVuButtonStyle
+import com.thevinesh.dejavu.ui.HeroCircle
+import com.thevinesh.dejavu.ui.StageScaffold
 import com.thevinesh.dejavu.ui.zoomInFrom
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.roundToInt
@@ -40,19 +40,14 @@ fun WordScreen(
     viewModel: WordViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val font = rememberCirculaFontFamily()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
-    ) {
+    StageScaffold {
         if (!state.physicsEnabled) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircleBackground(
+                HeroCircle(
                     size = 240.dp,
                     modifier = Modifier
                         .zoomInFrom(
@@ -68,24 +63,22 @@ fun WordScreen(
                 ) {
                     Text(
                         text = state.answer,
-                        color = PrimaryText,
+                        color = CloudWhite,
                         fontSize = resultFontSize(state.answer),
-                        fontFamily = font
+                        fontFamily = MaterialTheme.typography.displayMedium.fontFamily
                     )
                 }
             }
 
             if (state.showPlayLabel) {
-                Text(
+                DejaVuButton(
                     text = "Play with me",
-                    color = PrimaryText,
-                    fontSize = 15.sp,
-                    fontFamily = font,
+                    onClick = viewModel::onPlayTapped,
+                    style = DejaVuButtonStyle.Undo,
+                    size = DejaVuButtonSize.Compact,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(top = 24.dp, end = 16.dp)
-                        .background(Yellow, RoundedCornerShape(4.dp))
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
                 )
             }
         } else {
@@ -102,7 +95,6 @@ private fun BouncingWord(
     answer: String,
     onCollision: () -> Unit
 ) {
-    val font = rememberCirculaFontFamily()
     val density = LocalDensity.current
     val ballSizePx = with(density) { 120.dp.toPx() }
 
@@ -163,7 +155,7 @@ private fun BouncingWord(
             }
         }
 
-        CircleBackground(
+        HeroCircle(
             size = 120.dp,
             modifier = Modifier
                 .offset { IntOffset(position.x.roundToInt(), position.y.roundToInt()) }
@@ -182,9 +174,9 @@ private fun BouncingWord(
         ) {
             Text(
                 text = answer,
-                color = PrimaryText,
+                color = CloudWhite,
                 fontSize = resultFontSize(answer, compact = true),
-                fontFamily = font
+                fontFamily = MaterialTheme.typography.displayMedium.fontFamily
             )
         }
     }

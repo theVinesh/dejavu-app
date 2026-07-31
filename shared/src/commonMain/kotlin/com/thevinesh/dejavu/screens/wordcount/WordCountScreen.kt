@@ -1,6 +1,5 @@
 package com.thevinesh.dejavu.screens.wordcount
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,11 +24,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.thevinesh.dejavu.theme.Background
-import com.thevinesh.dejavu.theme.LighterTheme
-import com.thevinesh.dejavu.theme.PrimaryText
-import com.thevinesh.dejavu.theme.rememberCirculaFontFamily
-import com.thevinesh.dejavu.ui.CircleBackground
+import com.thevinesh.dejavu.theme.CloudWhite
+import com.thevinesh.dejavu.ui.HeroCircle
+import com.thevinesh.dejavu.ui.StageScaffold
 import com.thevinesh.dejavu.ui.TutorialOverlay
 import com.thevinesh.dejavu.ui.entranceThenFadeOut
 import com.thevinesh.dejavu.ui.fadeInOnEnter
@@ -43,7 +41,6 @@ fun WordCountScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val navEffect by viewModel.navEffect.collectAsStateWithLifecycle()
-    val font = rememberCirculaFontFamily()
 
     LaunchedEffect(navEffect) {
         when (navEffect) {
@@ -59,17 +56,12 @@ fun WordCountScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
-    ) {
+    StageScaffold {
         if (state.showIntroMessage) {
             Text(
                 text = "Think of a Word",
-                color = PrimaryText,
-                fontSize = 60.sp,
-                fontFamily = font,
+                color = CloudWhite,
+                style = MaterialTheme.typography.displayLarge,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -94,9 +86,8 @@ fun WordCountScreen(
             ) {
                 Text(
                     text = "No. of Letters",
-                    color = PrimaryText,
-                    fontSize = 30.sp,
-                    fontFamily = font
+                    color = CloudWhite,
+                    style = MaterialTheme.typography.headlineMedium
                 )
 
                 Box(
@@ -105,32 +96,30 @@ fun WordCountScreen(
                         .shake(state.shakeTrigger),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircleBackground(size = 200.dp) {
+                    HeroCircle(size = 200.dp) {
                         BasicTextField(
                             value = state.input,
                             onValueChange = { viewModel.onEvent(WordCountEvent.InputChanged(it)) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            cursorBrush = SolidColor(PrimaryText),
-                            textStyle = TextStyle(
-                                color = PrimaryText,
+                            cursorBrush = SolidColor(CloudWhite),
+                            textStyle = MaterialTheme.typography.displayLarge.copy(
+                                color = CloudWhite,
                                 fontSize = 100.sp,
-                                fontFamily = font,
                                 textAlign = TextAlign.Center
                             ),
                             decorationBox = { inner ->
                                 Box(
                                     contentAlignment = Alignment.Center,
-                                    modifier = Modifier
-                                        .background(LighterTheme)
-                                        .padding(horizontal = 8.dp)
+                                    modifier = Modifier.padding(horizontal = 8.dp)
                                 ) {
                                     if (state.input.isEmpty()) {
                                         Text(
                                             text = "?",
-                                            color = PrimaryText,
-                                            fontSize = 100.sp,
-                                            fontFamily = font
+                                            color = CloudWhite,
+                                            style = MaterialTheme.typography.displayLarge.copy(
+                                                fontSize = 100.sp
+                                            )
                                         )
                                     }
                                     inner()
@@ -147,18 +136,17 @@ fun WordCountScreen(
                             .clickable { viewModel.onEvent(WordCountEvent.Clear) },
                         contentAlignment = Alignment.Center
                     ) {
-                        CircleBackground(size = 50.dp) {
+                        HeroCircle(size = 50.dp) {
                             Text(
                                 text = "X",
-                                color = PrimaryText,
-                                fontSize = 25.sp,
-                                fontFamily = font
+                                color = CloudWhite,
+                                style = MaterialTheme.typography.titleLarge
                             )
                         }
                     }
                 }
 
-                CircleBackground(
+                HeroCircle(
                     size = 80.dp,
                     modifier = Modifier
                         .padding(top = 10.dp)
@@ -166,9 +154,8 @@ fun WordCountScreen(
                 ) {
                     Text(
                         text = "next",
-                        color = PrimaryText,
-                        fontSize = 30.sp,
-                        fontFamily = font
+                        color = CloudWhite,
+                        style = MaterialTheme.typography.labelLarge
                     )
                 }
 
@@ -179,9 +166,8 @@ fun WordCountScreen(
                     }
                     Text(
                         text = message,
-                        color = PrimaryText,
-                        fontSize = 16.sp,
-                        fontFamily = font,
+                        color = CloudWhite,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 16.dp, start = 24.dp, end = 24.dp)
                     )

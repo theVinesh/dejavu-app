@@ -64,13 +64,4 @@ object PuzzleEngine {
             }
         }
     }
-
-    fun formatGroupLabel(letters: String, selectionOrder: Int?): String {
-        val trimmed = letters.trimEnd()
-        return if (selectionOrder != null) {
-            "$trimmed\n($selectionOrder)"
-        } else {
-            trimmed
-        }
-    }
 }

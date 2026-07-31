@@ -1,24 +1,24 @@
 package com.thevinesh.dejavu.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.thevinesh.dejavu.theme.Green
-import com.thevinesh.dejavu.theme.Yellow
-import com.thevinesh.dejavu.theme.rememberCirculaFontFamily
+import com.thevinesh.dejavu.theme.DejaVuTheme
+import com.thevinesh.dejavu.theme.NightScrim
+import com.thevinesh.dejavu.theme.SunshineYellow
+import com.thevinesh.dejavu.theme.Teal
 
 @Composable
 fun TutorialOverlay(
@@ -27,11 +27,10 @@ fun TutorialOverlay(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val font = rememberCirculaFontFamily()
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.65f)),
+            .background(NightScrim),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -40,30 +39,39 @@ fun TutorialOverlay(
         ) {
             Text(
                 text = title,
-                color = Yellow,
-                fontSize = 30.sp,
-                fontFamily = font,
-                fontWeight = FontWeight.Bold,
+                color = SunshineYellow,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold
+                ),
                 textAlign = TextAlign.Center
             )
             Text(
                 text = detail,
-                color = Green,
-                fontSize = 20.sp,
-                fontFamily = font,
+                color = Teal,
+                style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 12.dp)
             )
-            Text(
+            DejaVuButton(
                 text = "Got it",
-                color = Yellow,
-                fontSize = 18.sp,
-                fontFamily = font,
+                onClick = onDismiss,
+                style = DejaVuButtonStyle.Undo,
+                size = DejaVuButtonSize.Compact,
                 modifier = Modifier
                     .padding(top = 28.dp)
-                    .clickable(role = Role.Button, onClick = onDismiss)
-                    .padding(horizontal = 24.dp, vertical = 12.dp)
             )
         }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFC0392B)
+@Composable
+private fun TutorialOverlayPreview() {
+    DejaVuTheme {
+        TutorialOverlay(
+            title = "Again!, One more time",
+            detail = "Tap the groups in which the letters occur",
+            onDismiss = {}
+        )
     }
 }

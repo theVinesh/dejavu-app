@@ -13,7 +13,7 @@ enum class StepPhase { Step1, Step2 }
 
 data class GroupItem(
     val letters: String,
-    val selectionOrder: Int? = null
+    val selectionOrders: List<Int> = emptyList()
 )
 
 data class StepUiState(
@@ -130,7 +130,8 @@ class StepViewModel(
     }
 
     private fun rebuildDisplay() {
-        // Original allows selecting the same cell multiple times and appends "(n)" each time.
+        // The same cell can be selected repeatedly; keep all tap orders structured
+        // so the UI can render them as a badge stack instead of mutating the label.
         val displayBase = if (_uiState.value.phase == StepPhase.Step2) {
             PuzzleEngine.toDisplayGroups(sourceGroups)
         } else {
@@ -143,15 +144,9 @@ class StepViewModel(
         }
 
         val groups = displayBase.mapIndexed { index, letters ->
-            val markers = orderMarkers[index]
-            val label = if (markers.isEmpty()) {
-                letters
-            } else {
-                letters + markers.joinToString(separator = "") { "($it)" }
-            }
             GroupItem(
-                letters = label,
-                selectionOrder = markers.lastOrNull()
+                letters = letters,
+                selectionOrders = orderMarkers[index].toList()
             )
         }
 
