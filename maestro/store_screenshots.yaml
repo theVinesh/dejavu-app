@@ -1,0 +1,66 @@
+appId: com.thevinesh.dejavu
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Think of a Word|No. of Letters|DejaVu"
+    timeout: 20000
+# Splash / intro
+- takeScreenshot: store_01_splash_or_intro
+- extendedWaitUntil:
+    visible: "No. of Letters"
+    timeout: 15000
+# Dismiss tutorial if present
+- runFlow:
+    when:
+      visible: "Got it"
+    commands:
+      - tapOn: "Got it"
+- takeScreenshot: store_02_wordcount
+- tapOn:
+    text: "?"
+    optional: true
+- inputText: "3"
+- tapOn: "next"
+# Step 1 tutorial dismiss
+- runFlow:
+    when:
+      visible: "Got it"
+    commands:
+      - tapOn: "Got it"
+- extendedWaitUntil:
+    visible: "undo"
+    timeout: 10000
+- takeScreenshot: store_03_step1
+# Tap first three groups (any) for a 3-letter word
+- tapOn:
+    point: "25%,25%"
+- tapOn:
+    point: "75%,25%"
+- tapOn:
+    point: "25%,45%"
+- runFlow:
+    when:
+      visible: "next"
+    commands:
+      - tapOn: "next"
+- extendedWaitUntil:
+    visible: "undo"
+    timeout: 10000
+- takeScreenshot: store_04_step2
+# Tap three more groups for step 2
+- tapOn:
+    point: "25%,25%"
+- tapOn:
+    point: "75%,25%"
+- tapOn:
+    point: "25%,45%"
+- runFlow:
+    when:
+      visible: "next"
+    commands:
+      - tapOn: "next"
+- extendedWaitUntil:
+    visible: ".*|DejaVu"
+    timeout: 10000
+- takeScreenshot: store_05_result
