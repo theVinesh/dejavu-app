@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Splash Screen Theme -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Splash screen background color (StageRed) -->
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        
+        <!-- Center icon -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        
+        <!-- Keep system splash short for smooth transition to custom animation -->
+        <item name="windowSplashScreenAnimationDuration">500</item>
+        
+        <!-- Theme to use after splash screen -->
+        <item name="postSplashScreenTheme">@android:style/Theme.Material.Light.NoActionBar</item>
+    </style>
+</resources>
