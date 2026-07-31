@@ -14,11 +14,11 @@ dependencies {
 }
 
 android {
-    namespace = "com.vincorp.dejavu"
+    namespace = "com.thevinesh.dejavu"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.vincorp.dejavu"
+        applicationId = "com.thevinesh.dejavu"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1

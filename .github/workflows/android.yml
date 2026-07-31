@@ -32,11 +32,18 @@ jobs:
       - name: Grant execute permission for Gradlew
         run: chmod +x gradlew
 
-      - name: Run shared unit tests
-        run: ./gradlew :shared:testDebugUnitTest --stacktrace
-
       - name: Assemble Android debug APK
         run: ./gradlew :androidApp:assembleDebug --stacktrace
+
+      - name: Run shared Android host tests
+        run: |
+          if ./gradlew :shared:tasks --all | grep -q 'androidHostTest'; then
+            ./gradlew :shared:androidHostTest --stacktrace
+          elif ./gradlew :shared:tasks --all | grep -q 'testDebugUnitTest'; then
+            ./gradlew :shared:testDebugUnitTest --stacktrace
+          else
+            ./gradlew :shared:allTests -x iosArm64Test -x iosSimulatorArm64Test --stacktrace
+          fi
 
       - name: Upload debug APK
         if: success()
