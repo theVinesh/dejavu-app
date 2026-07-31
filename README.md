@@ -76,12 +76,18 @@ You can also generate the framework from the command line on a Mac before openin
 ./gradlew :shared:testDebugUnitTest
 ```
 
-## CI
+## CI & release
 
-GitHub Actions workflows run on every push/PR to `main`:
+GitHub Actions on every push/PR to `main`:
 
 - **Android CI** (`.github/workflows/android.yml`) – unit tests + `assembleDebug`
 - **iOS CI** (`.github/workflows/ios.yml`) – shared framework + Xcode simulator build
+
+On push to `main` (and manual `workflow_dispatch`):
+
+- **Deploy** (`.github/workflows/deploy.yml`) – signed Android AAB → Play **internal** (`completed`, not draft) and iOS IPA → **TestFlight**
+
+See [docs/release_process.md](docs/release_process.md) for required secrets and one-time store setup.
 
 ## Architecture notes
 

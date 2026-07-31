@@ -18,3 +18,13 @@ captures
 !*.xcodeproj/project.xcworkspace/**
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
+
+# Release signing / Fastlane local artifacts
+**/release.jks
+**/play_config.json
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+vendor/bundle
+.bundle/
