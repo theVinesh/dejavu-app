@@ -1,6 +1,5 @@
 package com.thevinesh.dejavu.screens.step
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
@@ -109,7 +108,7 @@ fun StepScreen(
                     }
                 }
 
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = state.showTapHint,
                     enter = fadeIn(),
                     exit = fadeOut(),
@@ -148,17 +147,14 @@ fun StepScreen(
                     )
                 }
 
-                AnimatedVisibility(
-                    visible = state.showNext,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                    modifier = Modifier.weight(1f)
-                ) {
+                if (state.showNext) {
                     Box(
                         modifier = Modifier
+                            .weight(1f)
                             .fillMaxSize()
                             .background(Green)
-                            .clickable { viewModel.onNext() },
+                            .clickable { viewModel.onNext() }
+                            .fadeInOnEnter(),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
