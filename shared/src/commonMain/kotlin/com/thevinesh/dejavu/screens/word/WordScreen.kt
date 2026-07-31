@@ -2,6 +2,7 @@ package com.thevinesh.dejavu.screens.word
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -25,12 +26,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -69,7 +73,6 @@ import kotlin.math.sin
 
 private enum class CuePhase {
     Idle,
-    Emoji,
     Arrow,
     Caption
 }
@@ -84,6 +87,7 @@ fun WordScreen(
     RevealContent(
         answer = state.answer,
         feedback = state.feedback,
+        feedbackAnimationId = state.feedbackAnimationId,
         onRevealFinished = viewModel::onZoomFinished,
         onFeedback = viewModel::onFeedback,
         onBack = onRestart,
@@ -95,6 +99,7 @@ fun WordScreen(
 private fun RevealContent(
     answer: String,
     feedback: RevealFeedback,
+    feedbackAnimationId: Int,
     onRevealFinished: () -> Unit = {},
     onFeedback: (RevealFeedback) -> Unit = {},
     onBack: () -> Unit = {},
@@ -102,17 +107,23 @@ private fun RevealContent(
     animateReveal: Boolean = true
 ) {
     var cuePhase by remember { mutableStateOf(CuePhase.Idle) }
+    val emojiEmissions = remember { mutableStateListOf<Int>() }
 
     LaunchedEffect(feedback) {
         if (feedback == RevealFeedback.None) {
             cuePhase = CuePhase.Idle
             return@LaunchedEffect
         }
-        cuePhase = CuePhase.Emoji
         delay(900)
         cuePhase = CuePhase.Arrow
         delay(420)
         cuePhase = CuePhase.Caption
+    }
+
+    LaunchedEffect(feedbackAnimationId) {
+        if (feedbackAnimationId > 0) {
+            emojiEmissions += feedbackAnimationId
+        }
     }
 
     val caption = when (feedback) {
@@ -174,26 +185,31 @@ private fun RevealContent(
                             label = "Yes",
                             thumbUp = true,
                             selected = feedback == RevealFeedback.Positive,
-                            enabled = feedback == RevealFeedback.None,
+                            enabled = feedback == RevealFeedback.None ||
+                                feedback == RevealFeedback.Positive,
                             onClick = { onFeedback(RevealFeedback.Positive) }
                         )
                         FeedbackButton(
                             label = "No",
                             thumbUp = false,
                             selected = feedback == RevealFeedback.Negative,
-                            enabled = feedback == RevealFeedback.None,
+                            enabled = feedback == RevealFeedback.None ||
+                                feedback == RevealFeedback.Negative,
                             onClick = { onFeedback(RevealFeedback.Negative) }
                         )
                     }
 
-                    if (cuePhase == CuePhase.Emoji && feedback != RevealFeedback.None) {
-                        FloatingEmoji(
-                            emoji = if (feedback == RevealFeedback.Positive) "😄" else "😢",
-                            alignStart = feedback == RevealFeedback.Positive,
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .padding(top = 4.dp)
-                        )
+                    emojiEmissions.forEach { emissionId ->
+                        key(emissionId) {
+                            FloatingEmoji(
+                                emoji = if (feedback == RevealFeedback.Positive) "😄" else "😢",
+                                alignStart = feedback == RevealFeedback.Positive,
+                                onFinished = { emojiEmissions.remove(emissionId) },
+                                modifier = Modifier
+                                    .align(Alignment.TopCenter)
+                                    .padding(top = 4.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -203,7 +219,6 @@ private fun RevealContent(
                     pointToShare = feedback == RevealFeedback.Positive,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = 108.dp)
                         .fadeInOnEnter(durationMillis = 500)
                 )
             }
@@ -211,6 +226,7 @@ private fun RevealContent(
             RevealActionDock(
                 caption = caption,
                 showCaption = cuePhase == CuePhase.Caption,
+                feedback = feedback,
                 onBack = onBack,
                 onShare = onShare,
                 modifier = Modifier.align(Alignment.BottomCenter)
@@ -223,6 +239,7 @@ private fun RevealContent(
 private fun FloatingEmoji(
     emoji: String,
     alignStart: Boolean,
+    onFinished: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val progress = remember { Animatable(0f) }
@@ -232,6 +249,7 @@ private fun FloatingEmoji(
             targetValue = 1f,
             animationSpec = tween(durationMillis = 900, easing = FastOutSlowInEasing)
         )
+        onFinished()
     }
     val density = LocalDensity.current
     val risePx = with(density) { 72.dp.toPx() }
@@ -258,26 +276,77 @@ private fun BentCueArrow(
     modifier: Modifier = Modifier
 ) {
     Canvas(modifier = modifier) {
-        val start = Offset(
-            x = if (pointToShare) size.width * 0.38f else size.width * 0.62f,
-            y = size.height * 0.42f
-        )
+        val endY = size.height - 108.dp.toPx()
         val end = Offset(
-            x = if (pointToShare) size.width * 0.72f else size.width * 0.28f,
-            y = size.height * 0.88f
+            x = if (pointToShare) size.width * 0.75f else size.width * 0.25f,
+            y = endY
         )
-        val control1 = Offset(
-            x = if (pointToShare) size.width * 0.22f else size.width * 0.78f,
-            y = size.height * 0.55f
+        val start = Offset(
+            x = size.width * 0.5f,
+            y = minOf(452.dp.toPx(), endY - 130.dp.toPx())
         )
-        val control2 = Offset(
-            x = if (pointToShare) size.width * 0.55f else size.width * 0.45f,
-            y = size.height * 0.78f
+        val loopCenter = Offset(
+            x = start.x + (end.x - start.x) * 0.48f,
+            y = start.y + (end.y - start.y) * 0.5f
         )
+        val loopRadiusX = 19.dp.toPx()
+        val loopRadiusY = 15.dp.toPx()
+        val kappa = 0.5522848f
+        val loopTop = Offset(loopCenter.x, loopCenter.y - loopRadiusY)
+        val finalControl = Offset(end.x, end.y - 34.dp.toPx())
 
         val curve = Path().apply {
             moveTo(start.x, start.y)
-            cubicTo(control1.x, control1.y, control2.x, control2.y, end.x, end.y)
+            cubicTo(
+                start.x,
+                start.y + 28.dp.toPx(),
+                loopCenter.x - 12.dp.toPx(),
+                loopTop.y,
+                loopTop.x,
+                loopTop.y
+            )
+
+            cubicTo(
+                loopCenter.x + loopRadiusX * kappa,
+                loopCenter.y - loopRadiusY,
+                loopCenter.x + loopRadiusX,
+                loopCenter.y - loopRadiusY * kappa,
+                loopCenter.x + loopRadiusX,
+                loopCenter.y
+            )
+            cubicTo(
+                loopCenter.x + loopRadiusX,
+                loopCenter.y + loopRadiusY * kappa,
+                loopCenter.x + loopRadiusX * kappa,
+                loopCenter.y + loopRadiusY,
+                loopCenter.x,
+                loopCenter.y + loopRadiusY
+            )
+            cubicTo(
+                loopCenter.x - loopRadiusX * kappa,
+                loopCenter.y + loopRadiusY,
+                loopCenter.x - loopRadiusX,
+                loopCenter.y + loopRadiusY * kappa,
+                loopCenter.x - loopRadiusX,
+                loopCenter.y
+            )
+            cubicTo(
+                loopCenter.x - loopRadiusX,
+                loopCenter.y - loopRadiusY * kappa,
+                loopCenter.x - loopRadiusX * kappa,
+                loopCenter.y - loopRadiusY,
+                loopTop.x,
+                loopTop.y
+            )
+
+            cubicTo(
+                loopCenter.x + (end.x - loopCenter.x) * 0.55f,
+                loopCenter.y + 12.dp.toPx(),
+                finalControl.x,
+                finalControl.y,
+                end.x,
+                end.y
+            )
         }
         val stroke = SunshineYellow.copy(alpha = 0.88f)
         drawPath(
@@ -286,8 +355,8 @@ private fun BentCueArrow(
             style = Stroke(width = 3.5.dp.toPx(), cap = StrokeCap.Round)
         )
 
-        val tangentX = end.x - control2.x
-        val tangentY = end.y - control2.y
+        val tangentX = end.x - finalControl.x
+        val tangentY = end.y - finalControl.y
         val angle = atan2(tangentY, tangentX)
         val head = 14.dp.toPx()
         val left = Offset(
@@ -408,6 +477,7 @@ private fun ThumbIcon(thumbUp: Boolean) {
 private fun RevealActionDock(
     caption: String,
     showCaption: Boolean,
+    feedback: RevealFeedback,
     onBack: () -> Unit,
     onShare: () -> Unit,
     modifier: Modifier = Modifier
@@ -429,7 +499,11 @@ private fun RevealActionDock(
                 DejaVuButton(
                     text = "back",
                     onClick = onBack,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .attentionWiggle(
+                            enabled = showCaption && feedback == RevealFeedback.Negative
+                        ),
                     style = DejaVuButtonStyle.Undo,
                     leadingContent = {
                         Text(
@@ -445,7 +519,11 @@ private fun RevealActionDock(
                 DejaVuButton(
                     text = "Share DejaVu",
                     onClick = onShare,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .attentionWiggle(
+                            enabled = showCaption && feedback == RevealFeedback.Positive
+                        ),
                     style = DejaVuButtonStyle.Next
                 )
             }
@@ -471,6 +549,36 @@ private fun RevealActionDock(
     }
 }
 
+@Composable
+private fun Modifier.attentionWiggle(enabled: Boolean): Modifier {
+    val rotation = remember { Animatable(0f) }
+
+    LaunchedEffect(enabled) {
+        if (!enabled) {
+            rotation.snapTo(0f)
+            return@LaunchedEffect
+        }
+
+        while (true) {
+            rotation.animateTo(
+                targetValue = 0f,
+                animationSpec = keyframes {
+                    durationMillis = 340
+                    0f at 0
+                    -2.5f at 55
+                    2.5f at 110
+                    -1.8f at 165
+                    1.8f at 220
+                    0f at 300
+                }
+            )
+            delay(5_000)
+        }
+    }
+
+    return graphicsLayer { rotationZ = rotation.value }
+}
+
 private fun resultFontSize(answer: String): androidx.compose.ui.unit.TextUnit {
     val adjusted = when {
         answer.length <= 4 -> 50
@@ -488,6 +596,7 @@ private fun RevealContentPreview() {
             RevealContent(
                 answer = "APPLE",
                 feedback = RevealFeedback.None,
+                feedbackAnimationId = 0,
                 animateReveal = false
             )
         }

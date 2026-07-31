@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 class WordViewModelTest {
 
     @Test
-    fun feedbackLocksAfterFirstChoice() {
+    fun feedbackLocksOppositeChoiceButReplaysSelectedChoice() {
         val session = GameSession().apply { setEasterEgg() }
         val preferences = TutorialPreferences().apply { isFirstTime = false }
         val shareLauncher = RecordingShareLauncher()
@@ -17,9 +17,15 @@ class WordViewModelTest {
 
         viewModel.onFeedback(RevealFeedback.Positive)
         assertEquals(RevealFeedback.Positive, viewModel.uiState.value.feedback)
+        assertEquals(1, viewModel.uiState.value.feedbackAnimationId)
 
         viewModel.onFeedback(RevealFeedback.Negative)
         assertEquals(RevealFeedback.Positive, viewModel.uiState.value.feedback)
+        assertEquals(1, viewModel.uiState.value.feedbackAnimationId)
+
+        viewModel.onFeedback(RevealFeedback.Positive)
+        assertEquals(RevealFeedback.Positive, viewModel.uiState.value.feedback)
+        assertEquals(2, viewModel.uiState.value.feedbackAnimationId)
     }
 
     @Test

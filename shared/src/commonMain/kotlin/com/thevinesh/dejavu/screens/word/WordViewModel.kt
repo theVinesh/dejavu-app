@@ -19,7 +19,8 @@ enum class RevealFeedback {
 data class WordUiState(
     val answer: String = "",
     val zoomFinished: Boolean = false,
-    val feedback: RevealFeedback = RevealFeedback.None
+    val feedback: RevealFeedback = RevealFeedback.None,
+    val feedbackAnimationId: Int = 0
 )
 
 class WordViewModel(
@@ -43,8 +44,14 @@ class WordViewModel(
 
     fun onFeedback(feedback: RevealFeedback) {
         if (feedback == RevealFeedback.None) return
-        if (_uiState.value.feedback != RevealFeedback.None) return
-        _uiState.update { it.copy(feedback = feedback) }
+        val selected = _uiState.value.feedback
+        if (selected != RevealFeedback.None && selected != feedback) return
+        _uiState.update {
+            it.copy(
+                feedback = feedback,
+                feedbackAnimationId = it.feedbackAnimationId + 1
+            )
+        }
     }
 
     fun onShare() {
