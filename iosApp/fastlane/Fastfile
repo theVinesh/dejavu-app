@@ -130,5 +130,104 @@ platform :ios do
       overwrite_screenshots: true,
       precheck_include_in_app_purchases: false
     )
+
+    prune_duplicate_screenshots
+  end
+
+  desc "Delete duplicate App Store screenshots left behind by an earlier sync"
+  lane :prune_screenshots do
+    missing = missing_upload_requirements
+    if missing.any?
+      UI.user_error!("Missing App Store Connect API credentials for screenshot cleanup: #{missing.join(', ')}")
+    end
+
+    app_store_api_key
+    prune_duplicate_screenshots
+  end
+end
+
+# deliver verifies its uploads by re-reading the screenshot sets and matching
+# source checksums. App Store Connect does not list a screenshot until it has
+# finished processing it, so the check can run against a set that still looks
+# empty, deliver concludes every screenshot is missing, and uploads the whole
+# batch a second time - which is how the listing ends up with two copies of
+# each screen. Nothing in deliver reconciles that afterwards, so drop the extra
+# copies here: within each set, keep the first screenshot per source checksum.
+#
+# Relies on the Spaceship session that `app_store_api_key` establishes, so call
+# that first.
+def prune_duplicate_screenshots
+  app = Spaceship::ConnectAPI::App.find(ios_app_identifier)
+  UI.user_error!("Could not find app #{ios_app_identifier} on App Store Connect") if app.nil?
+
+  version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+  if version.nil?
+    UI.important("No editable App Store version - skipping screenshot cleanup")
+    return
+  end
+
+  # The same lag that makes deliver double-upload would make this pass see a set
+  # that is still filling up, so wait for the listing to settle first. Otherwise
+  # a run right after an upload happily reports no duplicates.
+  screenshot_sets = wait_for_settled_screenshot_sets(version)
+
+  removed = 0
+  summary = []
+
+  screenshot_sets.each do |locale, display_type, screenshots|
+    seen = {}
+    kept = 0
+
+    screenshots.each do |screenshot|
+      checksum = screenshot.source_file_checksum
+
+      # A screenshot with no checksum has not finished processing. Keep it rather
+      # than guess, so a healthy upload is never deleted.
+      if checksum.nil?
+        UI.important("Leaving #{locale} #{display_type} screenshot #{screenshot.file_name} in place - still processing")
+        kept += 1
+      elsif seen.key?(checksum)
+        UI.message("Removing duplicate #{locale} #{display_type} screenshot #{screenshot.file_name}")
+        screenshot.delete!
+        removed += 1
+      else
+        seen[checksum] = screenshot.id
+        kept += 1
+      end
+    end
+
+    summary << "#{locale} #{display_type}: #{kept}"
+  end
+
+  UI.message("Screenshots on App Store Connect - #{summary.join(', ')}")
+  if removed.zero?
+    UI.success("No duplicate screenshots found")
+  else
+    UI.success("Removed #{removed} duplicate screenshot(s)")
+  end
+end
+
+# Re-read every screenshot set until the total count stops changing and nothing is
+# mid-processing. Returns [locale, display_type, screenshots] triples.
+def wait_for_settled_screenshot_sets(version, timeout: 300, interval: 10)
+  deadline = Time.now + timeout
+  previous_count = nil
+
+  loop do
+    sets = version.get_app_store_version_localizations.flat_map do |localization|
+      localization.get_app_screenshot_sets.map do |screenshot_set|
+        [localization.locale, screenshot_set.screenshot_display_type, screenshot_set.app_screenshots || []]
+      end
+    end
+
+    all_screenshots = sets.flat_map { |_, _, screenshots| screenshots }
+    processing = all_screenshots.count { |screenshot| screenshot.source_file_checksum.nil? }
+    settled = processing.zero? && previous_count == all_screenshots.count
+
+    return sets if settled || Time.now >= deadline
+
+    UI.message("Waiting for App Store Connect to settle - #{all_screenshots.count} screenshot(s), #{processing} still processing")
+    previous_count = all_screenshots.count
+    sleep(interval)
   end
 end

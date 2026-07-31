@@ -39,6 +39,14 @@ Upload a prebuilt iOS release artifact to TestFlight
 
 Sync App Store listing metadata and screenshots (no binary upload)
 
+### ios prune_screenshots
+
+```sh
+[bundle exec] fastlane ios prune_screenshots
+```
+
+Delete duplicate App Store screenshots left behind by an earlier sync
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.

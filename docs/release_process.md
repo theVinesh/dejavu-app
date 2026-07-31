@@ -73,4 +73,50 @@ bundle exec fastlane android sync_store_listing
 | `iosApp/fastlane/screenshots/` | Device-sized screenshots for `deliver` |
 | `androidApp/fastlane/metadata/android/` | Play listings, icon, feature graphic, screenshots |
 
-Maestro flow for capturing UI screenshots: `maestro/store_screenshots.yaml`.
+## Screenshots
+
+`./scripts/store_screenshots.sh all` captures every form factor with
+`maestro/store_screenshots.yaml` and copies the results into the Fastlane paths
+above. Individual steps are `capture-ios`, `capture-android`, and `stage`.
+
+Raw captures are kept under `store_assets/screenshots/` and staged copies are
+committed, so a listing sync needs no devices.
+
+Both stores reject off-spec pixel dimensions, so each size is captured natively
+rather than resized afterwards — `stage` re-checks dimensions and fails before
+upload if a capture is wrong.
+
+| Store | Form factor | Captured on | Size |
+| --- | --- | --- | --- |
+| App Store | iPhone 6.9" | iPhone 17 Pro Max sim | 1320x2868 |
+| App Store | iPad 13" | iPad Pro 13-inch (M4) sim | 2064x2752 |
+| Play | Phone | emulator at `wm size 1080x1920` | 1080x1920 |
+| Play | 7-inch tablet | emulator at `wm size 1200x1920` | 1200x1920 |
+| Play | 10-inch tablet | emulator at `wm size 1600x2560` | 1600x2560 |
+
+Two constraints drive those choices:
+
+- **App Store Connect only requires the largest class per device family** and
+  scales the rest down. Supplying anything smaller for iPhone (for example
+  1206x2622, which is the 6.3" class) leaves the 6.9" slot empty, and review
+  then reports `You must upload a screenshot for 6.5-inch iPhone displays`.
+- **Play caps the long side at twice the short side**, so a stock 20:9 phone
+  capture is rejected. The emulator display is driven to Play's recommended
+  sizes instead of cropping or letterboxing afterwards.
+
+`deliver` picks the display class from the pixel dimensions, not the file name.
+The `APP_IPHONE_67_*` / `APP_IPAD_PRO_3GEN_129_*` prefixes are `deliver`'s own
+display-type constants, which still carry the older 6.7"/12.9" labels for what
+Apple now calls the 6.9" and 13" classes.
+
+### Known sync failures
+
+| Symptom | Cause | Handling |
+| --- | --- | --- |
+| Play: `Google Api Error: Invalid request - Upload has already been terminated` | The Google API client retries a resumable upload session that Google already closed; the retry returns a non-retryable 400. `supply` aborts on the first API error unless retries are enabled. | `sync_store_listing` sets `SUPPLY_UPLOAD_MAX_RETRIES=5`, which restarts the upload from the file path, and keeps `timeout` low so a stalled connection fails fast enough for the retry to help. |
+| App Store: two copies of every screenshot | ASC does not list a screenshot until processing finishes, so `deliver`'s post-upload check sees an empty set, assumes the batch failed, and uploads it again. | `sync_store_listing` finishes with a prune pass that drops duplicate checksums. Run `fastlane ios prune_screenshots` to clean up without re-uploading. |
+| Play: icon or feature graphic never changes | `supply` reads these as `images/icon.png` and `images/featureGraphic.png`. Nested in `images/icon/icon.png` they are skipped with no upload and no error. | Keep them flat; `scripts/store_screenshots.sh stage` writes them to the correct paths. |
+
+`sync_image_upload` compares checksums against the live listing, so only changed
+assets are uploaded. The first sync after a screenshot change does the work; runs
+after that upload nothing, which keeps the flaky-upload exposure small.

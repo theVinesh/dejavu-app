@@ -24,7 +24,7 @@ captures
 **/play_config.json
 **/fastlane/report.xml
 **/fastlane/Preview.html
-**/fastlane/screenshots
+**/fastlane/screenshots/**/Preview.html
 **/fastlane/test_output
 vendor/bundle
 .bundle/

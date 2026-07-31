@@ -7,10 +7,13 @@ Think of a word. Don’t say it out loud. Walk through a two-step letter-group p
 ## Project layout
 
 ```
-androidApp/   Android app
-iosApp/       Xcode / iOS app
-shared/       Shared logic + Compose UI
-docs/         Process docs (releases, etc.)
+androidApp/     Android app
+iosApp/         Xcode / iOS app
+shared/         Shared logic + Compose UI
+docs/           Process docs (releases, etc.)
+maestro/        UI flow used to capture store screenshots
+scripts/        Store screenshot capture / staging
+store_assets/   Raw screenshot captures, icon, feature graphic
 ```
 
 ## Setup

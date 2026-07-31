@@ -32,6 +32,14 @@ platform :android do
   lane :sync_store_listing do
     # Requires Play Console SA permission to manage store presence / commit listing edits.
     # Without that, uploads may succeed into an edit but commit returns 403 PERMISSION_DENIED.
+
+    # supply gives up on the first Google API error unless this is set. Image uploads
+    # regularly fail with "Upload has already been terminated": the google-api-client
+    # retries a resumable session that Google has already closed, which surfaces as a
+    # non-retryable 400. Retrying at the supply level starts a fresh session from the
+    # file path, so it recovers instead of aborting the whole listing sync.
+    ENV["SUPPLY_UPLOAD_MAX_RETRIES"] = ENV.fetch("SUPPLY_UPLOAD_MAX_RETRIES", "5")
+
     upload_to_play_store(
       json_key: play_json_key_path,
       track: ENV.fetch("ANDROID_PLAY_TRACK", "internal"),
@@ -41,9 +49,17 @@ platform :android do
       skip_upload_metadata: false,
       skip_upload_images: false,
       skip_upload_screenshots: false,
+      # Compare sha256 against the live listing and only upload what actually changed.
+      # Without this, supply deletes every screenshot before re-uploading, so a failure
+      # part way through leaves the listing with no screenshots at all.
+      sync_image_upload: true,
       metadata_path: "fastlane/metadata/android",
       changes_not_sent_for_review: true,
-      timeout: 1200
+      # Socket timeout per attempt. These are ~250 KB PNGs that upload in a few
+      # seconds, so a request still open after two minutes has stalled. Keeping
+      # this low is what makes the retries useful - a long timeout just parks the
+      # whole sync on one dead connection.
+      timeout: 120
     )
   end
 end

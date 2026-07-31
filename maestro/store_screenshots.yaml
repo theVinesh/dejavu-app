@@ -1,16 +1,26 @@
 appId: com.thevinesh.dejavu
 ---
+# Deterministic walkthrough for a 3-letter word.
+#
+# splitIntoGroups(3) always yields ABC DEF GHI JKL MNO PQR STU VWX YZ, and the
+# revealed word is [1st letter of the 1st pick, 2nd of the 2nd, 3rd of the 3rd].
+# Picking STU, JKL, GHI therefore transposes to SJG, TKH, ULI, and picking those
+# in order reveals "SKI" - a real word, so the final screenshot reads as a result
+# rather than a random letter triple.
+#
+# Every tap targets text instead of screen coordinates so the same flow produces
+# the same screens on phone and tablet form factors.
 - launchApp:
     clearState: true
 - extendedWaitUntil:
     visible: "Think of a Word|No. of Letters|DejaVu"
     timeout: 20000
-# Splash / intro
 - takeScreenshot: store_01_splash_or_intro
+
+# Word length
 - extendedWaitUntil:
     visible: "No. of Letters"
     timeout: 15000
-# Dismiss tutorial if present
 - runFlow:
     when:
       visible: "Got it"
@@ -22,45 +32,45 @@ appId: com.thevinesh.dejavu
     optional: true
 - inputText: "3"
 - tapOn: "next"
-# Step 1 tutorial dismiss
+
+# Step 1 - the untouched letter grid
 - runFlow:
     when:
       visible: "Got it"
     commands:
       - tapOn: "Got it"
 - extendedWaitUntil:
-    visible: "undo"
+    visible: "STU"
     timeout: 10000
 - takeScreenshot: store_03_step1
-# Tap first three groups (any) for a 3-letter word
-- tapOn:
-    point: "25%,25%"
-- tapOn:
-    point: "75%,25%"
-- tapOn:
-    point: "25%,45%"
+- tapOn: "STU"
+- tapOn: "JKL"
+- tapOn: "GHI"
+- tapOn: "next"
+
+# Step 2 - transposed groups, captured with the stacked selection badges showing.
+# This tutorial has to be dismissed too, otherwise its full-screen scrim swallows
+# the taps below and the flow never reaches the reveal screen.
+- extendedWaitUntil:
+    visible: "Again!, One more time"
+    timeout: 10000
+    optional: true
 - runFlow:
     when:
-      visible: "next"
+      visible: "Got it"
     commands:
-      - tapOn: "next"
+      - tapOn: "Got it"
 - extendedWaitUntil:
-    visible: "undo"
+    visible: "SJG"
     timeout: 10000
+- tapOn: "SJG"
+- tapOn: "TKH"
+- tapOn: "ULI"
 - takeScreenshot: store_04_step2
-# Tap three more groups for step 2
-- tapOn:
-    point: "25%,25%"
-- tapOn:
-    point: "75%,25%"
-- tapOn:
-    point: "25%,45%"
-- runFlow:
-    when:
-      visible: "next"
-    commands:
-      - tapOn: "next"
+- tapOn: "next"
+
+# Reveal - wait for the zoom-in to settle so the word is at rest and readable
 - extendedWaitUntil:
-    visible: ".*|DejaVu"
-    timeout: 10000
+    visible: "Play with me"
+    timeout: 20000
 - takeScreenshot: store_05_result
