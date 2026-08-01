@@ -276,7 +276,7 @@ private fun BentCueArrow(
     modifier: Modifier = Modifier
 ) {
     Canvas(modifier = modifier) {
-        val endY = size.height - 108.dp.toPx()
+        val endY = size.height - 116.dp.toPx()
         val end = Offset(
             x = if (pointToShare) size.width * 0.75f else size.width * 0.25f,
             y = endY
@@ -285,65 +285,22 @@ private fun BentCueArrow(
             x = size.width * 0.5f,
             y = minOf(452.dp.toPx(), endY - 130.dp.toPx())
         )
-        val loopCenter = Offset(
-            x = start.x + (end.x - start.x) * 0.48f,
-            y = start.y + (end.y - start.y) * 0.5f
+        val control1 = Offset(
+            x = start.x,
+            y = start.y + 48.dp.toPx()
         )
-        val loopRadiusX = 19.dp.toPx()
-        val loopRadiusY = 15.dp.toPx()
-        val kappa = 0.5522848f
-        val loopTop = Offset(loopCenter.x, loopCenter.y - loopRadiusY)
-        val finalControl = Offset(end.x, end.y - 34.dp.toPx())
+        val control2 = Offset(
+            x = end.x + if (pointToShare) -22.dp.toPx() else 22.dp.toPx(),
+            y = end.y - 42.dp.toPx()
+        )
 
         val curve = Path().apply {
             moveTo(start.x, start.y)
             cubicTo(
-                start.x,
-                start.y + 28.dp.toPx(),
-                loopCenter.x - 12.dp.toPx(),
-                loopTop.y,
-                loopTop.x,
-                loopTop.y
-            )
-
-            cubicTo(
-                loopCenter.x + loopRadiusX * kappa,
-                loopCenter.y - loopRadiusY,
-                loopCenter.x + loopRadiusX,
-                loopCenter.y - loopRadiusY * kappa,
-                loopCenter.x + loopRadiusX,
-                loopCenter.y
-            )
-            cubicTo(
-                loopCenter.x + loopRadiusX,
-                loopCenter.y + loopRadiusY * kappa,
-                loopCenter.x + loopRadiusX * kappa,
-                loopCenter.y + loopRadiusY,
-                loopCenter.x,
-                loopCenter.y + loopRadiusY
-            )
-            cubicTo(
-                loopCenter.x - loopRadiusX * kappa,
-                loopCenter.y + loopRadiusY,
-                loopCenter.x - loopRadiusX,
-                loopCenter.y + loopRadiusY * kappa,
-                loopCenter.x - loopRadiusX,
-                loopCenter.y
-            )
-            cubicTo(
-                loopCenter.x - loopRadiusX,
-                loopCenter.y - loopRadiusY * kappa,
-                loopCenter.x - loopRadiusX * kappa,
-                loopCenter.y - loopRadiusY,
-                loopTop.x,
-                loopTop.y
-            )
-
-            cubicTo(
-                loopCenter.x + (end.x - loopCenter.x) * 0.55f,
-                loopCenter.y + 12.dp.toPx(),
-                finalControl.x,
-                finalControl.y,
+                control1.x,
+                control1.y,
+                control2.x,
+                control2.y,
                 end.x,
                 end.y
             )
@@ -355,8 +312,8 @@ private fun BentCueArrow(
             style = Stroke(width = 3.5.dp.toPx(), cap = StrokeCap.Round)
         )
 
-        val tangentX = end.x - finalControl.x
-        val tangentY = end.y - finalControl.y
+        val tangentX = end.x - control2.x
+        val tangentY = end.y - control2.y
         val angle = atan2(tangentY, tangentX)
         val head = 14.dp.toPx()
         val left = Offset(
