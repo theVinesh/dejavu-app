@@ -4,4 +4,5 @@ interface ShareLauncher {
     fun shareText(text: String)
 }
 
-const val DEJAVU_SHARE_TEXT = "https://vineshbuilds.app/dejavu"
+const val DEJAVU_SHARE_TEXT =
+    "I thought of a word and DejaVu read my mind. No setup, no trick. It just knew. Your turn: https://vineshbuilds.app/dejavu"
