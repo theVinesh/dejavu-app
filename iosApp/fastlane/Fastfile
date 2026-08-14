@@ -202,6 +202,7 @@ platform :ios do
       skip_app_version_update: true,
       skip_screenshots: true,
       submit_for_review: true,
+      reject_if_possible: true,
       run_precheck_before_submit: false,
       force: true,
       overwrite_screenshots: true,
