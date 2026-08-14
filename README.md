@@ -22,7 +22,7 @@ store_assets/   Raw screenshot captures, icon, feature graphic
 
 - JDK 17+ (CI uses 21)
 - Android SDK (`compileSdk` 36, `minSdk` 24)
-- macOS + Xcode 15+ for iOS (deployment target iOS 14+)
+- macOS + Xcode 15+ for iOS (deployment target iOS 15+)
 
 **Clone and configure**
 
