@@ -81,7 +81,7 @@ jobs:
           ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Upload Android release AAB artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: dejavu-android-release-aab
           path: androidApp/build/outputs/bundle/release/androidApp-release.aab
@@ -133,7 +133,7 @@ jobs:
           APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
 
       - name: Upload iOS release IPA artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: dejavu-ios-release-ipa
           path: iosApp/build/ci-release/DejaVu.ipa
@@ -159,7 +159,7 @@ jobs:
         run: echo '${{ secrets.PLAY_STORE_CONFIG_JSON }}' > "${{ github.workspace }}/androidApp/play_config.json"
 
       - name: Download Android release AAB artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: dejavu-android-release-aab
           path: androidApp/build/outputs/bundle/release
@@ -191,7 +191,7 @@ jobs:
           bundler-cache: true
 
       - name: Download iOS release IPA artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: dejavu-ios-release-ipa
           path: iosApp/build/ci-release
