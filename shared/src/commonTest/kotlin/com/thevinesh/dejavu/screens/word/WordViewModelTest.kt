@@ -5,6 +5,7 @@ import com.thevinesh.dejavu.domain.GameSession
 import com.thevinesh.dejavu.platform.ShareLauncher
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 class WordViewModelTest {
 
@@ -29,7 +30,7 @@ class WordViewModelTest {
     }
 
     @Test
-    fun shareUsesPlaceholderLink() {
+    fun shareSendsCatchyCopyWithStoreLinkAndWithholdsWord() {
         val session = GameSession().apply { setEasterEgg() }
         val preferences = TutorialPreferences().apply { isFirstTime = false }
         val shareLauncher = RecordingShareLauncher()
@@ -37,7 +38,15 @@ class WordViewModelTest {
 
         viewModel.onShare()
 
-        assertEquals(listOf("https://vineshbuilds.app/dejavu"), shareLauncher.shared)
+        val shared = shareLauncher.shared.single()
+        assertEquals(
+            "I thought of a word and DejaVu read my mind. No setup, no trick. It just knew. Your turn: https://vineshbuilds.app/dejavu",
+            shared
+        )
+        assertFalse(
+            "Share text must not reveal the guessed word",
+            shared.contains(session.answer)
+        )
     }
 
     private class RecordingShareLauncher : ShareLauncher {
