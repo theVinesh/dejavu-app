@@ -73,10 +73,16 @@ platform :android do
 
     changelog = ENV["WHATS_NEW_PLAY_FILE"]
     if changelog && File.exist?(changelog)
-      changelogs_dir = File.join("fastlane", "metadata", "android", "en-US", "changelogs")
-      FileUtils.mkdir_p(changelogs_dir)
-      FileUtils.cp(changelog, File.join(changelogs_dir, "#{latest}.txt"))
-      UI.message("Staged 'what's new' for versionCode #{latest}")
+      dir = File.join("fastlane", "metadata", "android", "en-US", "changelogs")
+      FileUtils.mkdir_p(dir)
+      FileUtils.cp(changelog, File.join(dir, "#{latest}.txt"))
+      locales = Dir.children("fastlane/metadata/android").reject { |f| f.start_with?(".") }
+      locales.each do |locale|
+        locale_dir = File.join("fastlane/metadata/android", locale, "changelogs")
+        FileUtils.mkdir_p(locale_dir)
+        FileUtils.cp(changelog, File.join(locale_dir, "#{latest}.txt"))
+      end
+      UI.message("Staged 'what's new' changelog for versionCode #{latest} in #{locales.length} locale(s)")
     end
 
     upload_to_play_store(
