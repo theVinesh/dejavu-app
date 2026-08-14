@@ -1,3 +1,5 @@
+require "fileutils"
+
 default_platform(:android)
 
 def play_json_key_path
@@ -61,5 +63,34 @@ platform :android do
       # whole sync on one dead connection.
       timeout: 120
     )
+  end
+
+  desc "Promote the newest internal release to production (no binary upload)"
+  lane :promote_to_production do
+    json_key = play_json_key_path
+    latest = google_play_track_version_codes(track: "internal", json_key: json_key).map(&:to_i).max
+    UI.user_error!("No internal release found to promote") unless latest
+
+    changelog = ENV["WHATS_NEW_PLAY_FILE"]
+    if changelog && File.exist?(changelog)
+      changelogs_dir = File.join("fastlane", "metadata", "android", "en-US", "changelogs")
+      FileUtils.mkdir_p(changelogs_dir)
+      FileUtils.cp(changelog, File.join(changelogs_dir, "#{latest}.txt"))
+      UI.message("Staged 'what's new' for versionCode #{latest}")
+    end
+
+    upload_to_play_store(
+      json_key: json_key,
+      track: "internal",
+      track_promote_to: "production",
+      version_code: latest,
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: changelog ? false : true
+    )
+    UI.success("Promoted internal release #{latest} to production")
   end
 end

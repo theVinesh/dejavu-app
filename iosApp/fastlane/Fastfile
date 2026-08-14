@@ -1,3 +1,5 @@
+require "fileutils"
+
 default_platform(:ios)
 
 def ci?
@@ -143,6 +145,72 @@ platform :ios do
 
     app_store_api_key
     prune_duplicate_screenshots
+  end
+
+  desc "Submit the newest valid TestFlight build for App Store review"
+  lane :submit_for_review do
+    missing = missing_upload_requirements
+    UI.user_error!("Missing App Store Connect API credentials: #{missing.join(', ')}") if missing.any?
+
+    api_key = app_store_api_key
+    app = Spaceship::ConnectAPI::App.find(ios_app_identifier)
+    UI.user_error!("App not found: #{ios_app_identifier}") unless app
+
+    builds = Spaceship::ConnectAPI::Build.all(
+      app_id: app.id,
+      sort: "-version",
+      limit: 30
+    )
+    build = builds.find { |candidate| candidate.processing_state == "VALID" }
+    states = builds.map(&:processing_state).uniq.join(", ")
+    UI.user_error!("No VALID TestFlight build to submit (seen states: #{states})") unless build
+    build_number = build.version.to_s
+    version_string = build.app_version.to_s
+    UI.message("Submitting build #{build_number} (version #{version_string}) for App Store review")
+
+    platform = Spaceship::ConnectAPI::Platform::IOS
+    edit_version = app.get_edit_app_store_version(platform: platform)
+    if edit_version && edit_version.version_string != version_string
+      UI.message("Retargeting editable App Store version #{edit_version.version_string} -> #{version_string}")
+      app.ensure_version!(version_string, platform: platform)
+    end
+
+    edit = nil
+    8.times do |index|
+      edit = app.get_edit_app_store_version(platform: platform)
+      break if edit
+      sleep [10 * (2**index), 300].min
+    end
+    UI.user_error!("Timed out waiting for an editable App Store version") unless edit
+
+    notes = ENV["WHATS_NEW_IOS_FILE"]
+    if notes && File.exist?(notes)
+      notes_path = File.join("fastlane", "metadata", "en-US", "release_notes.txt")
+      FileUtils.mkdir_p(File.dirname(notes_path))
+      FileUtils.cp(notes, notes_path)
+      UI.message("Staged 'what's new' release notes")
+    end
+
+    deliver(
+      api_key: api_key,
+      app_identifier: ios_app_identifier,
+      app_version: version_string,
+      build_number: build_number,
+      metadata_path: "fastlane/metadata",
+      screenshots_path: "fastlane/screenshots",
+      skip_binary_upload: true,
+      skip_app_version_update: true,
+      submit_for_review: true,
+      run_precheck_before_submit: false,
+      force: true,
+      overwrite_screenshots: true,
+      submission_information: {
+        export_compliance_uses_encryption: false,
+        export_compliance_encryption_updated: false
+      }
+    )
+    prune_duplicate_screenshots
+    UI.success("Submitted build #{build_number} for App Store review")
   end
 end
 
