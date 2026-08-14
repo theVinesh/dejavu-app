@@ -44,8 +44,8 @@ class WordViewModelTest {
             shared
         )
         assertFalse(
-            "Share text must not reveal the guessed word",
-            shared.contains(session.answer)
+            shared.contains(session.answer),
+            "Share text must not reveal the guessed word"
         )
     }
 
