@@ -209,6 +209,13 @@ platform :ios do
       submission_information: {
         export_compliance_uses_encryption: false,
         export_compliance_encryption_updated: false
+      },
+      app_review_information: {
+        contact_email: "support@vineshbuilds.app",
+        contact_first_name: "Vinesh Raju",
+        contact_last_name: "Radhakrishnan",
+        contact_phone_number: "+353892338410",
+        notes: "No demo account required. Launch the app and follow the on-screen prompts.\n\n- Dismiss the tutorial overlay, if any.\n- Consider a small word like CAT for testing purposes (3 letters).\n- Tap ? to open the keyboard. Type the word. Hit Next.\n- Select the groups where the letters C, A and T appear in that order. Hit Next.\n- Do the same again. That's it.\n\nThe puzzle regenerates on each launch."
       }
     )
     prune_duplicate_screenshots
