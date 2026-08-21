@@ -40,7 +40,7 @@ class WordViewModelTest {
 
         val shared = shareLauncher.shared.single()
         assertEquals(
-            "I thought of a word and DejaVu read my mind. No setup, no trick. It just knew. Your turn: https://vineshbuilds.app/dejavu",
+            "I thought of a word and DejaVu read my mind. No setup, no trick. It just knew. Your turn: https://thevinesh.com/builds/dejavu",
             shared
         )
         assertFalse(
